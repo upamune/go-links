@@ -34,6 +34,9 @@ def init_app_without_routes(disable_csrf=False):
   app.secret_key = config.get_config()['sessions_secret']
 
   app.config['SQLALCHEMY_DATABASE_URI'] = config.get_config()['postgres']['url']
+  if config.get_config()['sqlite']['url']:
+    app.config['SQLALCHEMY_DATABASE_URI'] = config.get_config()['sqlite']['url']
+
   if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
     # SQLAlchemy deprecated the `postgres` dialect, but it's still used by Heroku Postgres:
     # https://help.heroku.com/ZKNTJQSK/why-is-sqlalchemy-1-4-x-not-connecting-to-heroku-postgres
@@ -125,7 +128,7 @@ with app.app_context():
 
     migrate = Migrate(app, db)
 
-    if os.getenv('POSTGRES_UPGRADE_ON_START', '').lower() == 'true':
+    if os.getenv('POSTGRES_UPGRADE_ON_START', '').lower() == 'true' or os.getenv('SQLITE_UPGRADE_ON_START', '').lower() == 'true':
       upgrade_db(directory=os.path.join(os.path.dirname(__file__), 'migrations'))
   except:
     logging.warning("Exception from Flask-Migrate/Alembic. This may be expected if you've deployed a new version of the"

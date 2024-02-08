@@ -24,9 +24,19 @@ def get_config():
   if os.getenv('TROTTO_CONFIG'):
     return yaml.load(base64.b64decode(os.getenv('TROTTO_CONFIG')), Loader=yaml.SafeLoader)
 
-  if os.getenv('DATABASE_URL') and os.getenv('FLASK_SECRET'):
-    return {'postgres': {'url': os.getenv('DATABASE_URL')},
-            'sessions_secret': os.getenv('FLASK_SECRET')}
+  database_url = os.getenv('DATABASE_URL')
+  flask_secret = os.getenv('FLASK_SECRET')
+
+  if database_url and flask_secret:
+    config = {
+        'sessions_secret': flask_secret,
+    }
+    if database_url.startswith('sqlite://'):
+      config['sqlite'] = {'url': database_url}
+    if database_url.startswith('postgres://') or database_url.startswith('postgresql://'):
+        config['postgres'] = {'url': database_url}
+
+    return config
 
   config_file_name = 'secrets.yaml'
 
